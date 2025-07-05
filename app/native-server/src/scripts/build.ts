@@ -3,78 +3,78 @@ import fs from 'fs';
 import path from 'path';
 
 const distDir = path.join(__dirname, '..', '..', 'dist');
-// 清理上次构建
-console.log('清理上次构建...');
+// 前回のビルドをクリア
+console.log('前回のビルドをクリア中...');
 try {
   fs.rmSync(distDir, { recursive: true, force: true });
 } catch (err) {
-  // 忽略目录不存在的错误
+  // ディレクトリが存在しないエラーを無視
   console.log(err);
 }
 
-// 创建dist目录
+// distディレクトリを作成
 fs.mkdirSync(distDir, { recursive: true });
-fs.mkdirSync(path.join(distDir, 'logs'), { recursive: true }); // 创建logs目录
-console.log('dist 和 dist/logs 目录已创建/确认存在');
+fs.mkdirSync(path.join(distDir, 'logs'), { recursive: true }); // logsディレクトリを作成
+console.log('dist および dist/logs ディレクトリが作成/確認されました');
 
-// 编译TypeScript
-console.log('编译TypeScript...');
+// TypeScriptをコンパイル
+console.log('TypeScriptをコンパイル中...');
 execSync('tsc', { stdio: 'inherit' });
 
-// 复制配置文件
-console.log('复制配置文件...');
+// 設定ファイルをコピー
+console.log('設定ファイルをコピー中...');
 const configSourcePath = path.join(__dirname, '..', 'mcp', 'stdio-config.json');
 const configDestPath = path.join(distDir, 'mcp', 'stdio-config.json');
 
 try {
-  // 确保目标目录存在
+  // ターゲットディレクトリが存在することを確認
   fs.mkdirSync(path.dirname(configDestPath), { recursive: true });
 
   if (fs.existsSync(configSourcePath)) {
     fs.copyFileSync(configSourcePath, configDestPath);
-    console.log(`已将 stdio-config.json 复制到 ${configDestPath}`);
+    console.log(`stdio-config.json を ${configDestPath} にコピーしました`);
   } else {
-    console.error(`错误: 配置文件未找到: ${configSourcePath}`);
+    console.error(`エラー: 設定ファイルが見つかりません: ${configSourcePath}`);
   }
 } catch (error) {
-  console.error('复制配置文件时出错:', error);
+  console.error('設定ファイルのコピー中にエラーが発生しました:', error);
 }
 
-// 复制package.json并更新其内容
-console.log('准备package.json...');
+// package.jsonをコピーして内容を更新
+console.log('package.jsonを準備中...');
 const packageJson = require('../../package.json');
 
-// 创建安装说明
+// READMEを作成
 const readmeContent = `# ${packageJson.name}
 
-本程序为Chrome扩展的Native Messaging主机端。
+このプログラムはChrome拡張機能のNative Messagingホストです。
 
-## 安装说明
+## インストール方法
 
-1. 确保已安装Node.js
-2. 全局安装本程序:
+1. Node.jsがインストールされていることを確認
+2. このプログラムをグローバルインストール:
    \`\`\`
    npm install -g ${packageJson.name}
    \`\`\`
-3. 注册Native Messaging主机:
+3. Native Messagingホストを登録:
    \`\`\`
-   # 用户级别安装（推荐）
+   # ユーザーレベルでのインストール（推奨）
    ${packageJson.name} register
 
-   # 如果用户级别安装失败，可以尝试系统级别安装
+   # ユーザーレベルでのインストールが失敗した場合、システムレベルでの試行
    ${packageJson.name} register --system
-   # 或者使用管理员权限
+   # または管理者権限を使用
    sudo ${packageJson.name} register
    \`\`\`
 
 ## 使用方法
 
-此应用程序由Chrome扩展自动启动，无需手动运行。
+このアプリケーションはChrome拡張機能によって自動起動されるため、手動で実行する必要はありません。
 `;
 
 fs.writeFileSync(path.join(distDir, 'README.md'), readmeContent);
 
-console.log('复制包装脚本...');
+console.log('ラッパースクリプトをコピー中...');
 const scriptsSourceDir = path.join(__dirname, '.');
 const macOsWrapperSourcePath = path.join(scriptsSourceDir, 'run_host.sh');
 const windowsWrapperSourcePath = path.join(scriptsSourceDir, 'run_host.bat');
@@ -85,37 +85,41 @@ const windowsWrapperDestPath = path.join(distDir, 'run_host.bat');
 try {
   if (fs.existsSync(macOsWrapperSourcePath)) {
     fs.copyFileSync(macOsWrapperSourcePath, macOsWrapperDestPath);
-    console.log(`已将 ${macOsWrapperSourcePath} 复制到 ${macOsWrapperDestPath}`);
+    console.log(`${macOsWrapperSourcePath} を ${macOsWrapperDestPath} にコピーしました`);
   } else {
-    console.error(`错误: macOS 包装脚本源文件未找到: ${macOsWrapperSourcePath}`);
+    console.error(
+      `エラー: macOS ラッパースクリプトのソースファイルが見つかりません: ${macOsWrapperSourcePath}`,
+    );
   }
 
   if (fs.existsSync(windowsWrapperSourcePath)) {
     fs.copyFileSync(windowsWrapperSourcePath, windowsWrapperDestPath);
-    console.log(`已将 ${windowsWrapperSourcePath} 复制到 ${windowsWrapperDestPath}`);
+    console.log(`${windowsWrapperSourcePath} を ${windowsWrapperDestPath} にコピーしました`);
   } else {
-    console.error(`错误: Windows 包装脚本源文件未找到: ${windowsWrapperSourcePath}`);
+    console.error(
+      `エラー: Windows ラッパースクリプトのソースファイルが見つかりません: ${windowsWrapperSourcePath}`,
+    );
   }
 } catch (error) {
-  console.error('复制包装脚本时出错:', error);
+  console.error('ラッパースクリプトのコピー中にエラーが発生しました:', error);
 }
 
-// 为关键JavaScript文件和macOS包装脚本添加可执行权限
-console.log('添加可执行权限...');
-const filesToMakeExecutable = ['index.js', 'cli.js', 'run_host.sh']; // cli.js 假设在 dist 根目录
+// 重要なJavaScriptファイルとmacOSラッパースクリプトに実行権限を追加
+console.log('実行権限を追加中...');
+const filesToMakeExecutable = ['index.js', 'cli.js', 'run_host.sh']; // cli.jsはdistルートディレクトリにあると想定
 
 filesToMakeExecutable.forEach((file) => {
-  const filePath = path.join(distDir, file); // filePath 现在是目标路径
+  const filePath = path.join(distDir, file); // filePathは現在のターゲットパス
   try {
     if (fs.existsSync(filePath)) {
       fs.chmodSync(filePath, '755');
-      console.log(`已为 ${file} 添加可执行权限 (755)`);
+      console.log(`${file} に実行権限 (755) を追加しました`);
     } else {
-      console.warn(`警告: ${filePath} 不存在，无法添加可执行权限`);
+      console.warn(`警告: ${filePath} が存在しないため、実行権限を追加できません`);
     }
   } catch (error) {
-    console.error(`为 ${file} 添加可执行权限时出错:`, error);
+    console.error(`${file} に実行権限を追加中にエラーが発生しました:`, error);
   }
 });
 
-console.log('✅ 构建完成');
+console.log('✅ ビルド完了');

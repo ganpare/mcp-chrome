@@ -7,12 +7,12 @@
     </div>
     <div class="content">
       <div class="section">
-        <h2 class="section-title">Native Server 配置</h2>
+        <h2 class="section-title">Native Server 設定</h2>
         <div class="config-card">
           <div class="status-section">
             <div class="status-header">
-              <p class="status-label">运行状态</p>
-              <button class="refresh-status-button" @click="refreshServerStatus" title="刷新状态">
+              <p class="status-label">実行状態</p>
+              <button class="refresh-status-button" @click="refreshServerStatus" title="状態を更新">
                 🔄
               </button>
             </div>
@@ -21,13 +21,13 @@
               <span class="status-text">{{ getStatusText() }}</span>
             </div>
             <div v-if="serverStatus.lastUpdated" class="status-timestamp">
-              最后更新: {{ new Date(serverStatus.lastUpdated).toLocaleTimeString() }}
+              最終更新: {{ new Date(serverStatus.lastUpdated).toLocaleTimeString() }}
             </div>
           </div>
 
           <div v-if="showMcpConfig" class="mcp-config-section">
             <div class="mcp-config-header">
-              <p class="mcp-config-label">MCP 服务器配置</p>
+              <p class="mcp-config-label">MCP サーバー設定</p>
               <button class="copy-config-button" @click="copyMcpConfig">
                 {{ copyButtonText }}
               </button>
@@ -37,7 +37,7 @@
             </div>
           </div>
           <div class="port-section">
-            <label for="port" class="port-label">连接端口</label>
+            <label for="port" class="port-label">接続ポート</label>
             <input
               type="text"
               id="port"
@@ -50,14 +50,14 @@
           <button class="connect-button" :disabled="isConnecting" @click="testNativeConnection">
             <BoltIcon />
             <span>{{
-              isConnecting ? '连接中...' : nativeConnectionStatus === 'connected' ? '断开' : '连接'
+              isConnecting ? '接続中...' : nativeConnectionStatus === 'connected' ? '切断' : '接続'
             }}</span>
           </button>
         </div>
       </div>
 
       <div class="section">
-        <h2 class="section-title">语义引擎</h2>
+        <h2 class="section-title">セマンティック検索エンジン</h2>
         <div class="semantic-engine-card">
           <div class="semantic-engine-status">
             <div class="status-info">
@@ -65,7 +65,7 @@
               <span class="status-text">{{ getSemanticEngineStatusText() }}</span>
             </div>
             <div v-if="semanticEngineLastUpdated" class="status-timestamp">
-              最后更新: {{ new Date(semanticEngineLastUpdated).toLocaleTimeString() }}
+              最終更新: {{ new Date(semanticEngineLastUpdated).toLocaleTimeString() }}
             </div>
           </div>
 
@@ -88,7 +88,7 @@
       </div>
 
       <div class="section">
-        <h2 class="section-title">Embedding模型</h2>
+        <h2 class="section-title">Embeddingモデル</h2>
 
         <ProgressIndicator
           v-if="isModelSwitching || isModelDownloading"
@@ -100,8 +100,8 @@
           <div class="error-content">
             <div class="error-icon">⚠️</div>
             <div class="error-details">
-              <p class="error-title">模型初始化失败</p>
-              <p class="error-message">{{ modelErrorMessage || '模型加载失败' }}</p>
+              <p class="error-title">モデル初期化失敗</p>
+              <p class="error-message">{{ modelErrorMessage || 'モデル読み込み失敗' }}</p>
               <p class="error-suggestion">{{ getErrorTypeText() }}</p>
             </div>
           </div>
@@ -111,7 +111,7 @@
             :disabled="isModelSwitching || isModelDownloading"
           >
             <span>🔄</span>
-            <span>重试</span>
+            <span>再試行</span>
           </button>
         </div>
 
@@ -151,11 +151,11 @@
       </div>
 
       <div class="section">
-        <h2 class="section-title">索引数据管理</h2>
+        <h2 class="section-title">インデックスデータ管理</h2>
         <div class="stats-grid">
           <div class="stats-card">
             <div class="stats-header">
-              <p class="stats-label">已索引页面</p>
+              <p class="stats-label">インデックス済みページ</p>
               <span class="stats-icon violet">
                 <DocumentIcon />
               </span>
@@ -165,7 +165,7 @@
 
           <div class="stats-card">
             <div class="stats-header">
-              <p class="stats-label">索引大小</p>
+              <p class="stats-label">インデックスサイズ</p>
               <span class="stats-icon teal">
                 <DatabaseIcon />
               </span>
@@ -175,7 +175,7 @@
 
           <div class="stats-card">
             <div class="stats-header">
-              <p class="stats-label">活跃标签页</p>
+              <p class="stats-label">アクティブタブ</p>
               <span class="stats-icon blue">
                 <TabIcon />
               </span>
@@ -185,7 +185,7 @@
 
           <div class="stats-card">
             <div class="stats-header">
-              <p class="stats-label">向量文档</p>
+              <p class="stats-label">ベクトル文書</p>
               <span class="stats-icon green">
                 <VectorIcon />
               </span>
@@ -206,7 +206,7 @@
           @click="showClearConfirmation = true"
         >
           <TrashIcon />
-          <span>{{ isClearingData ? '清空中...' : '清空所有数据' }}</span>
+          <span>{{ isClearingData ? 'データ削除中...' : '全データを削除' }}</span>
         </button>
       </div>
 
@@ -225,14 +225,18 @@
 
     <ConfirmDialog
       :visible="showClearConfirmation"
-      title="确认清空数据"
-      message="此操作将清空所有已索引的网页内容和向量数据，包括："
-      :items="['所有网页的文本内容索引', '向量嵌入数据', '搜索历史和缓存']"
-      warning="此操作不可撤销！清空后需要重新浏览网页来重建索引。"
+      title="データ削除の確認"
+      message="この操作は、すべてのインデックス済みWebページコンテンツとベクターデータを削除します："
+      :items="[
+        'すべてのWebページのテキストコンテンツインデックス',
+        'ベクター埋め込みデータ',
+        '検索履歴とキャッシュ',
+      ]"
+      warning="この操作は元に戻せません！削除後、インデックスを再構築するには再度Webページを閲覧する必要があります。"
       icon="⚠️"
-      confirm-text="确认清空"
-      cancel-text="取消"
-      confirming-text="清空中..."
+      confirm-text="削除を確認"
+      cancel-text="キャンセル"
+      confirming-text="削除中..."
       :is-confirming="isClearingData"
       @confirm="confirmClearAllData"
       @cancel="hideClearDataConfirmation"
@@ -282,7 +286,7 @@ const showMcpConfig = computed(() => {
   return nativeConnectionStatus.value === 'connected' && serverStatus.value.isRunning;
 });
 
-const copyButtonText = ref('复制配置');
+const copyButtonText = ref('設定をコピー');
 
 const mcpConfigJson = computed(() => {
   const port = serverStatus.value.port || nativeServerPort.value;
@@ -368,14 +372,14 @@ const getStatusClass = () => {
 const getStatusText = () => {
   if (nativeConnectionStatus.value === 'connected') {
     if (serverStatus.value.isRunning) {
-      return `服务运行中 (端口: ${serverStatus.value.port || 'Unknown'})`;
+      return `サーバー実行中 (ポート: ${serverStatus.value.port || 'Unknown'})`;
     } else {
-      return '已连接，服务未启动';
+      return '接続済み、サーバー未起動';
     }
   } else if (nativeConnectionStatus.value === 'disconnected') {
-    return '服务未连接';
+    return 'サーバー未接続';
   } else {
-    return '检测中...';
+    return '検出中...';
   }
 };
 
@@ -388,22 +392,22 @@ const formatIndexSize = () => {
 const getModelDescription = (model: any) => {
   switch (model.preset) {
     case 'multilingual-e5-small':
-      return '轻量级多语言模型';
+      return '軽量多言語モデル';
     case 'multilingual-e5-base':
-      return '比e5-small稍大，但效果更好';
+      return 'e5-smallより大きく、より良い効果';
     default:
-      return '多语言语义模型';
+      return '多言語セマンティックモデル';
   }
 };
 
 const getPerformanceText = (performance: string) => {
   switch (performance) {
     case 'fast':
-      return '快速';
+      return '高速';
     case 'balanced':
-      return '平衡';
+      return 'バランス';
     case 'accurate':
-      return '精确';
+      return '高精度';
     default:
       return performance;
   }
@@ -412,14 +416,14 @@ const getPerformanceText = (performance: string) => {
 const getSemanticEngineStatusText = () => {
   switch (semanticEngineStatus.value) {
     case 'ready':
-      return '语义引擎已就绪';
+      return 'セマンティック検索エンジン準備完了';
     case 'initializing':
-      return '语义引擎初始化中...';
+      return 'セマンティック検索エンジン初期化中...';
     case 'error':
-      return '语义引擎初始化失败';
+      return 'セマンティック検索エンジン初期化失敗';
     case 'idle':
     default:
-      return '语义引擎未初始化';
+      return 'セマンティック検索エンジン未初期化';
   }
 };
 
@@ -443,9 +447,9 @@ const getActiveTabsCount = () => {
 
 const getProgressText = () => {
   if (isModelDownloading.value) {
-    return `下载模型中... ${modelDownloadProgress.value}%`;
+    return `モデルダウンロード中... ${modelDownloadProgress.value}%`;
   } else if (isModelSwitching.value) {
-    return modelSwitchProgress.value || '切换模型中...';
+    return modelSwitchProgress.value || 'モデル切り替え中...';
   }
   return '';
 };
@@ -453,26 +457,26 @@ const getProgressText = () => {
 const getErrorTypeText = () => {
   switch (modelErrorType.value) {
     case 'network':
-      return '网络连接错误，请检查网络连接后重试';
+      return 'ネットワーク接続エラーです。ネットワーク接続を確認して再試行してください';
     case 'file':
-      return '模型文件损坏或不完整，请重试下载';
+      return 'モデルファイルが破損または不完全です。ダウンロードを再試行してください';
     case 'unknown':
     default:
-      return '未知错误，请检查你的网络是否可以访问huggingface';
+      return '不明なエラーです。Hugging Faceへのネットワークアクセスが可能かご確認ください';
   }
 };
 
 const getSemanticEngineButtonText = () => {
   switch (semanticEngineStatus.value) {
     case 'ready':
-      return '重新初始化';
+      return '再初期化';
     case 'initializing':
-      return '初始化中...';
+      return '初期化中...';
     case 'error':
-      return '重新初始化';
+      return '再初期化';
     case 'idle':
     default:
-      return '初始化语义引擎';
+      return 'セマンティック検索エンジンを初期化';
   }
 };
 
@@ -524,7 +528,7 @@ const saveSemanticEngineState = async () => {
     // eslint-disable-next-line no-undef
     await chrome.storage.local.set({ semanticEngineState });
   } catch (error) {
-    console.error('保存语义引擎状态失败:', error);
+    console.error('セマンティック検索エンジン状態の保存に失敗:', error);
   }
 };
 
@@ -539,8 +543,8 @@ const initializeSemanticEngine = async () => {
   isSemanticEngineInitializing.value = true;
   semanticEngineStatus.value = 'initializing';
   semanticEngineInitProgress.value = isReinitialization
-    ? '正在重新初始化语义引擎...'
-    : '正在初始化语义引擎...';
+    ? 'セマンティック検索エンジンを再初期化中...'
+    : 'セマンティック検索エンジンを初期化中...';
   semanticEngineLastUpdated.value = Date.now();
 
   await saveSemanticEngineState();
@@ -552,18 +556,18 @@ const initializeSemanticEngine = async () => {
         type: BACKGROUND_MESSAGE_TYPES.INITIALIZE_SEMANTIC_ENGINE,
       })
       .catch((error) => {
-        console.error('❌ Error sending semantic engine initialization request:', error);
+        console.error('❌ セマンティックエンジン初期化リクエストの送信エラー:', error);
       });
 
     startSemanticEngineStatusPolling();
 
     semanticEngineInitProgress.value = isReinitialization
-      ? '重新初始化请求已发送，正在后台处理...'
-      : '初始化请求已发送，正在后台处理...';
+      ? '再初期化リクエストを送信しました、バックグラウンドで処理中...'
+      : '初期化リクエストを送信しました、バックグラウンドで処理中...';
   } catch (error: any) {
-    console.error('❌ Failed to send initialization request:', error);
+    console.error('❌ 初期化リクエストの送信に失敗:', error);
     semanticEngineStatus.value = 'error';
-    semanticEngineInitProgress.value = `发送初始化请求失败: ${error?.message || '未知错误'}`;
+    semanticEngineInitProgress.value = `初期化リクエストの送信に失敗: ${error?.message || '不明なエラー'}`;
 
     await saveSemanticEngineState();
 
@@ -591,7 +595,7 @@ const checkSemanticEngineStatus = async () => {
         semanticEngineStatus.value = 'ready';
         semanticEngineLastUpdated.value = Date.now();
         isSemanticEngineInitializing.value = false;
-        semanticEngineInitProgress.value = '语义引擎初始化成功！';
+        semanticEngineInitProgress.value = 'セマンティック検索エンジン初期化成功！';
         await saveSemanticEngineState();
         stopSemanticEngineStatusPolling();
         setTimeout(() => {
@@ -603,14 +607,14 @@ const checkSemanticEngineStatus = async () => {
       ) {
         semanticEngineStatus.value = 'initializing';
         isSemanticEngineInitializing.value = true;
-        semanticEngineInitProgress.value = '正在初始化语义引擎...';
+        semanticEngineInitProgress.value = 'セマンティックエンジンを初期化中...';
         semanticEngineLastUpdated.value = Date.now();
         await saveSemanticEngineState();
       } else if (status.initializationStatus === 'error') {
         semanticEngineStatus.value = 'error';
         semanticEngineLastUpdated.value = Date.now();
         isSemanticEngineInitializing.value = false;
-        semanticEngineInitProgress.value = '语义引擎初始化失败';
+        semanticEngineInitProgress.value = 'セマンティック検索エンジン初期化失敗';
         await saveSemanticEngineState();
         stopSemanticEngineStatusPolling();
         setTimeout(() => {
@@ -661,7 +665,7 @@ const checkNativeConnection = async () => {
     const response = await chrome.runtime.sendMessage({ type: 'ping_native' });
     nativeConnectionStatus.value = response?.connected ? 'connected' : 'disconnected';
   } catch (error) {
-    console.error('检测 Native 连接状态失败:', error);
+    console.error('Native接続状態の検出に失敗:', error);
     nativeConnectionStatus.value = 'disconnected';
   }
 };
@@ -680,7 +684,7 @@ const checkServerStatus = async () => {
       nativeConnectionStatus.value = response.connected ? 'connected' : 'disconnected';
     }
   } catch (error) {
-    console.error('检测服务器状态失败:', error);
+    console.error('サーバー状態の検出に失敗:', error);
   }
 };
 
@@ -698,24 +702,24 @@ const refreshServerStatus = async () => {
       nativeConnectionStatus.value = response.connected ? 'connected' : 'disconnected';
     }
   } catch (error) {
-    console.error('刷新服务器状态失败:', error);
+    console.error('サーバー状態の更新に失敗:', error);
   }
 };
 
 const copyMcpConfig = async () => {
   try {
     await navigator.clipboard.writeText(mcpConfigJson.value);
-    copyButtonText.value = '✅已复制';
+    copyButtonText.value = '✅コピー済み';
 
     setTimeout(() => {
-      copyButtonText.value = '复制配置';
+      copyButtonText.value = '設定をコピー';
     }, 2000);
   } catch (error) {
-    console.error('复制配置失败:', error);
-    copyButtonText.value = '❌复制失败';
+    console.error('設定のコピーに失敗:', error);
+    copyButtonText.value = '❌コピー失敗';
 
     setTimeout(() => {
-      copyButtonText.value = '复制配置';
+      copyButtonText.value = '設定をコピー';
     }, 2000);
   }
 };
@@ -729,7 +733,7 @@ const testNativeConnection = async () => {
       await chrome.runtime.sendMessage({ type: 'disconnect_native' });
       nativeConnectionStatus.value = 'disconnected';
     } else {
-      console.log(`尝试连接到端口: ${nativeServerPort.value}`);
+      console.log(`ポートへの接続を試行中: ${nativeServerPort.value}`);
       // eslint-disable-next-line no-undef
       const response = await chrome.runtime.sendMessage({
         type: 'connectNative',
@@ -737,15 +741,15 @@ const testNativeConnection = async () => {
       });
       if (response && response.success) {
         nativeConnectionStatus.value = 'connected';
-        console.log('连接成功:', response);
+        console.log('接続成功:', response);
         await savePortPreference(nativeServerPort.value);
       } else {
         nativeConnectionStatus.value = 'disconnected';
-        console.error('连接失败:', response);
+        console.error('接続失敗:', response);
       }
     }
   } catch (error) {
-    console.error('测试连接失败:', error);
+    console.error('接続テストに失敗:', error);
     nativeConnectionStatus.value = 'disconnected';
   } finally {
     isConnecting.value = false;
@@ -822,7 +826,7 @@ const loadModelPreference = async () => {
       semanticEngineStatus.value = 'idle';
     }
   } catch (error) {
-    console.error('❌ 加载模型偏好失败:', error);
+    console.error('❌ モデル設定の読み込み失敗:', error);
   }
 };
 
@@ -831,7 +835,7 @@ const saveModelPreference = async (model: ModelPreset) => {
     // eslint-disable-next-line no-undef
     await chrome.storage.local.set({ selectedModel: model });
   } catch (error) {
-    console.error('保存模型偏好失败:', error);
+    console.error('モデル設定の保存失敗:', error);
   }
 };
 
@@ -840,7 +844,7 @@ const saveVersionPreference = async (version: 'full' | 'quantized' | 'compressed
     // eslint-disable-next-line no-undef
     await chrome.storage.local.set({ selectedVersion: version });
   } catch (error) {
-    console.error('保存版本偏好失败:', error);
+    console.error('バージョン設定の保存に失敗:', error);
   }
 };
 
@@ -848,9 +852,9 @@ const savePortPreference = async (port: number) => {
   try {
     // eslint-disable-next-line no-undef
     await chrome.storage.local.set({ nativeServerPort: port });
-    console.log(`端口偏好已保存: ${port}`);
+    console.log(`ポート設定を保存しました: ${port}`);
   } catch (error) {
-    console.error('保存端口偏好失败:', error);
+    console.error('ポート設定の保存に失敗:', error);
   }
 };
 
@@ -860,10 +864,10 @@ const loadPortPreference = async () => {
     const result = await chrome.storage.local.get(['nativeServerPort']);
     if (result.nativeServerPort) {
       nativeServerPort.value = result.nativeServerPort;
-      console.log(`端口偏好已加载: ${result.nativeServerPort}`);
+      console.log(`ポート設定を読み込みました: ${result.nativeServerPort}`);
     }
   } catch (error) {
-    console.error('加载端口偏好失败:', error);
+    console.error('ポート設定の読み込みに失敗:', error);
   }
 };
 
@@ -878,7 +882,7 @@ const saveModelState = async () => {
     // eslint-disable-next-line no-undef
     await chrome.storage.local.set({ modelState });
   } catch (error) {
-    console.error('保存模型状态失败:', error);
+    console.error('モデル状態の保存失敗:', error);
   }
 };
 
@@ -904,7 +908,7 @@ const startModelStatusMonitoring = () => {
         isModelDownloading.value = status.isDownloading || false;
 
         if (status.initializationStatus === 'error') {
-          modelErrorMessage.value = status.errorMessage || '模型加载失败';
+          modelErrorMessage.value = status.errorMessage || 'モデル読み込み失敗';
           modelErrorType.value = status.errorType || 'unknown';
         } else {
           modelErrorMessage.value = '';
@@ -918,7 +922,7 @@ const startModelStatusMonitoring = () => {
         }
       }
     } catch (error) {
-      console.error('获取模型状态失败:', error);
+      console.error('モデル状態の取得に失敗:', error);
     }
   }, 1000);
 };
@@ -1004,10 +1008,10 @@ const confirmClearAllData = async () => {
   if (isClearingData.value) return;
 
   isClearingData.value = true;
-  clearDataProgress.value = '正在清空所有数据...';
+  clearDataProgress.value = 'すべてのデータを削除中...';
 
   try {
-    console.log('🗑️ Starting to clear all data...');
+    console.log('🗑️ すべてのデータの削除を開始...');
 
     // eslint-disable-next-line no-undef
     const response = await chrome.runtime.sendMessage({
@@ -1015,8 +1019,8 @@ const confirmClearAllData = async () => {
     });
 
     if (response && response.success) {
-      clearDataProgress.value = '数据清空成功！';
-      console.log('✅ All data cleared successfully');
+      clearDataProgress.value = 'データ削除が成功しました！';
+      console.log('✅ すべてのデータが正常に削除されました');
 
       await refreshStorageStats();
 
@@ -1025,11 +1029,11 @@ const confirmClearAllData = async () => {
         hideClearDataConfirmation();
       }, 2000);
     } else {
-      throw new Error(response?.error || '清空数据失败');
+      throw new Error(response?.error || 'データ削除に失敗しました');
     }
   } catch (error: any) {
-    console.error('❌ Failed to clear all data:', error);
-    clearDataProgress.value = `清空数据失败: ${error?.message || '未知错误'}`;
+    console.error('❌ すべてのデータの削除に失敗:', error);
+    clearDataProgress.value = `データ削除に失敗: ${error?.message || '不明なエラー'}`;
 
     setTimeout(() => {
       clearDataProgress.value = '';
@@ -1076,7 +1080,7 @@ const switchModel = async (newModel: ModelPreset) => {
   );
 
   isModelSwitching.value = true;
-  modelSwitchProgress.value = '正在切换模型...';
+  modelSwitchProgress.value = 'モデル切り替え中...';
 
   modelInitializationStatus.value = 'downloading';
   modelDownloadProgress.value = 0;
@@ -1087,7 +1091,7 @@ const switchModel = async (newModel: ModelPreset) => {
     await saveVersionPreference('quantized');
     await saveModelState();
 
-    modelSwitchProgress.value = '正在重新初始化语义引擎...';
+    modelSwitchProgress.value = 'セマンティック検索エンジンを再初期化中...';
 
     startModelStatusMonitoring();
 
@@ -1102,9 +1106,9 @@ const switchModel = async (newModel: ModelPreset) => {
 
     if (response && response.success) {
       currentModel.value = newModel;
-      modelSwitchProgress.value = '模型切换成功！';
+      modelSwitchProgress.value = 'モデル切り替えが成功しました！';
       console.log(
-        '模型切换成功:',
+        'モデル切り替えが成功しました:',
         newModel,
         'version: quantized',
         'dimension:',
@@ -1119,30 +1123,31 @@ const switchModel = async (newModel: ModelPreset) => {
         modelSwitchProgress.value = '';
       }, 2000);
     } else {
-      throw new Error(response?.error || '模型切换失败');
+      throw new Error(response?.error || 'モデル切り替えに失敗しました');
     }
   } catch (error: any) {
-    console.error('模型切换失败:', error);
-    modelSwitchProgress.value = `模型切换失败: ${error?.message || '未知错误'}`;
+    console.error('モデル切り替えに失敗:', error);
+    modelSwitchProgress.value = `モデル切り替えに失敗: ${error?.message || '不明なエラー'}`;
 
     modelInitializationStatus.value = 'error';
     isModelDownloading.value = false;
 
-    const errorMessage = error?.message || '未知错误';
+    const errorMessage = error?.message || '不明なエラー';
     if (
       errorMessage.includes('network') ||
       errorMessage.includes('fetch') ||
       errorMessage.includes('timeout')
     ) {
       modelErrorType.value = 'network';
-      modelErrorMessage.value = '网络连接失败，无法下载模型文件';
+      modelErrorMessage.value =
+        'ネットワーク接続に失敗しました。モデルファイルをダウンロードできません';
     } else if (
       errorMessage.includes('corrupt') ||
       errorMessage.includes('invalid') ||
       errorMessage.includes('format')
     ) {
       modelErrorType.value = 'file';
-      modelErrorMessage.value = '模型文件损坏或格式错误';
+      modelErrorMessage.value = 'モデルファイルが破損または形式エラーです';
     } else {
       modelErrorType.value = 'unknown';
       modelErrorMessage.value = errorMessage;

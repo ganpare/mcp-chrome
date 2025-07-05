@@ -6,7 +6,7 @@
 
 > 🌟 **Turn your Chrome browser into your intelligent assistant** - Let AI take control of your browser, transforming it into a powerful AI-controlled automation tool.
 
-**📖 Documentation**: [English](README.md) | [中文](README_zh.md)
+**📖 Documentation**: [English](README.md) | [中文](README_zh.md) | [日本語](README_ja.md)
 
 ---
 

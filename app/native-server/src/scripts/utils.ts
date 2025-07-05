@@ -10,7 +10,7 @@ export const mkdir = promisify(fs.mkdir);
 export const writeFile = promisify(fs.writeFile);
 
 /**
- * 打印彩色文本
+ * カラーテキストを出力
  */
 export function colorText(text: string, color: string): string {
   const colors: Record<string, string> = {
@@ -98,19 +98,19 @@ export async function getMainPath(): Promise<string> {
 }
 
 /**
- * 确保关键文件具有执行权限
+ * 重要ファイルの実行権限を確保
  */
 export async function ensureExecutionPermissions(): Promise<void> {
   try {
     const packageDistDir = path.join(__dirname, '..');
 
     if (process.platform === 'win32') {
-      // Windows 平台处理
+      // Windowsプラットフォームの処理
       await ensureWindowsFilePermissions(packageDistDir);
       return;
     }
 
-    // Unix/Linux 平台处理
+    // Unix/Linuxプラットフォームの処理
     const filesToCheck = [
       path.join(packageDistDir, 'index.js'),
       path.join(packageDistDir, 'run_host.sh'),
@@ -142,7 +142,7 @@ export async function ensureExecutionPermissions(): Promise<void> {
 }
 
 /**
- * Windows 平台文件权限处理
+ * Windowsプラットフォームファイル権限処理
  */
 async function ensureWindowsFilePermissions(packageDistDir: string): Promise<void> {
   const filesToCheck = [
@@ -154,18 +154,18 @@ async function ensureWindowsFilePermissions(packageDistDir: string): Promise<voi
   for (const filePath of filesToCheck) {
     if (fs.existsSync(filePath)) {
       try {
-        // 检查文件是否为只读，如果是则移除只读属性
+        // ファイルが読み取り専用かどうかをチェックし、読み取り専用の場合は読み取り専用属性を削除
         const stats = fs.statSync(filePath);
         if (!(stats.mode & parseInt('200', 8))) {
-          // 检查写权限
-          // 尝试移除只读属性
+          // 書き込み権限をチェック
+          // 読み取り専用属性を削除しようとする
           fs.chmodSync(filePath, stats.mode | parseInt('200', 8));
           console.log(
             colorText(`✓ Removed read-only attribute from ${path.basename(filePath)}`, 'green'),
           );
         }
 
-        // 验证文件可读性
+        // ファイルの読み取り可能性を検証
         fs.accessSync(filePath, fs.constants.R_OK);
         console.log(
           colorText(`✓ Verified file accessibility for ${path.basename(filePath)}`, 'green'),
@@ -193,18 +193,18 @@ export async function createManifestContent(): Promise<any> {
   return {
     name: HOST_NAME,
     description: DESCRIPTION,
-    path: mainPath, // Node.js可执行文件路径
+    path: mainPath, // Node.js実行ファイルのパス
     type: 'stdio',
     allowed_origins: [`chrome-extension://${EXTENSION_ID}/`],
   };
 }
 
 /**
- * 验证Windows注册表项是否存在
+ * Windowsレジストリエントリが存在するかを検証
  */
 function verifyWindowsRegistryEntry(registryKey: string, expectedPath: string): boolean {
   if (os.platform() !== 'win32') {
-    return true; // 非Windows平台跳过验证
+    return true; // 非Windowsプラットフォームは検証をスキップ
   }
 
   try {
@@ -222,61 +222,63 @@ function verifyWindowsRegistryEntry(registryKey: string, expectedPath: string): 
 }
 
 /**
- * 尝试注册用户级别的Native Messaging主机
+ * ユーザーレベルのNative Messagingホストの登録を試行
  */
 export async function tryRegisterUserLevelHost(): Promise<boolean> {
   try {
-    console.log(colorText('Attempting to register user-level Native Messaging host...', 'blue'));
+    console.log(colorText('ユーザーレベルNative Messagingホストの登録を試行中...', 'blue'));
 
-    // 1. 确保执行权限
+    // 1. 実行権限を確保
     await ensureExecutionPermissions();
 
-    // 2. 确定清单文件路径
+    // 2. マニフェストファイルパスを決定
     const manifestPath = getUserManifestPath();
 
-    // 3. 确保目录存在
+    // 3. ディレクトリの存在を確保
     await mkdir(path.dirname(manifestPath), { recursive: true });
 
-    // 4. 创建清单内容
+    // 4. マニフェストコンテンツを作成
     const manifest = await createManifestContent();
 
     console.log('manifest path==>', manifest, manifestPath);
 
-    // 5. 写入清单文件
+    // 5. マニフェストファイルを書き込み
     await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
 
     if (os.platform() === 'win32') {
       const registryKey = `HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\${HOST_NAME}`;
       try {
-        // 确保路径使用正确的转义格式
+        // パスが正しいエスケープ形式を使用することを確保
         const escapedPath = manifestPath.replace(/\\/g, '\\\\');
         const regCommand = `reg add "${registryKey}" /ve /t REG_SZ /d "${escapedPath}" /f`;
 
-        console.log(colorText(`Executing registry command: ${regCommand}`, 'blue'));
+        console.log(colorText(`レジストリコマンドを実行中: ${regCommand}`, 'blue'));
         execSync(regCommand, { stdio: 'pipe' });
 
-        // 验证注册表项是否创建成功
+        // レジストリエントリが正常に作成されたかを確認
         if (verifyWindowsRegistryEntry(registryKey, manifestPath)) {
-          console.log(colorText('✓ Successfully created Windows registry entry', 'green'));
+          console.log(colorText('✓ Windowsレジストリエントリが正常に作成されました', 'green'));
         } else {
-          console.log(colorText('⚠️ Registry entry created but verification failed', 'yellow'));
+          console.log(
+            colorText('⚠️ レジストリエントリは作成されましたが、検証に失敗しました', 'yellow'),
+          );
         }
       } catch (error: any) {
         console.log(
-          colorText(`⚠️ Unable to create Windows registry entry: ${error.message}`, 'yellow'),
+          colorText(`⚠️ Windowsレジストリエントリを作成できません: ${error.message}`, 'yellow'),
         );
-        console.log(colorText(`Registry key: ${registryKey}`, 'yellow'));
-        console.log(colorText(`Manifest path: ${manifestPath}`, 'yellow'));
-        return false; // Windows上如果注册表项创建失败，整个注册过程应该视为失败
+        console.log(colorText(`レジストリキー: ${registryKey}`, 'yellow'));
+        console.log(colorText(`マニフェストパス: ${manifestPath}`, 'yellow'));
+        return false; // Windows上でレジストリエントリの作成が失敗した場合、全体の登録プロセスは失敗とみなす
       }
     }
 
-    console.log(colorText('Successfully registered user-level Native Messaging host!', 'green'));
+    console.log(colorText('ユーザーレベルNative Messagingホストが正常に登録されました！', 'green'));
     return true;
   } catch (error) {
     console.log(
       colorText(
-        `User-level registration failed: ${error instanceof Error ? error.message : String(error)}`,
+        `ユーザーレベル登録に失敗: ${error instanceof Error ? error.message : String(error)}`,
         'yellow',
       ),
     );
@@ -284,146 +286,139 @@ export async function tryRegisterUserLevelHost(): Promise<boolean> {
   }
 }
 
-// 导入is-admin包（仅在Windows平台使用）
+// is-adminパッケージのインポート（Windowsプラットフォームでのみ使用）
 let isAdmin: () => boolean = () => false;
 if (process.platform === 'win32') {
   try {
     isAdmin = require('is-admin');
   } catch (error) {
-    console.warn('缺少is-admin依赖，Windows平台下可能无法正确检测管理员权限');
+    console.warn(
+      'is-admin依存関係が不足しています。Windowsプラットフォームで管理者権限を正しく検出できない可能性があります',
+    );
     console.warn(error);
   }
 }
 
 /**
- * 使用提升权限注册系统级清单
+ * 昇格権限を使用してシステムレベルマニフェストを登録
  */
 export async function registerWithElevatedPermissions(): Promise<void> {
   try {
-    console.log(colorText('Attempting to register system-level manifest...', 'blue'));
+    console.log(colorText('システムレベルマニフェストの登録を試行中...', 'blue'));
 
-    // 1. 确保执行权限
+    // 1. 実行権限を確保
     await ensureExecutionPermissions();
 
-    // 2. 准备清单内容
+    // 2. マニフェストコンテンツを準備
     const manifest = await createManifestContent();
 
-    // 3. 获取系统级清单路径
+    // 3. システムレベルマニフェストパスを取得
     const manifestPath = getSystemManifestPath();
 
-    // 4. 创建临时清单文件
+    // 4. 一時マニフェストファイルを作成
     const tempManifestPath = path.join(os.tmpdir(), `${HOST_NAME}.json`);
     await writeFile(tempManifestPath, JSON.stringify(manifest, null, 2));
 
-    // 5. 检测是否已经有管理员权限
+    // 5. 管理者権限を既に持っているかどうかを検出
     const isRoot = process.getuid && process.getuid() === 0; // Unix/Linux/Mac
-    const hasAdminRights = process.platform === 'win32' ? isAdmin() : false; // Windows平台检测管理员权限
+    const hasAdminRights = process.platform === 'win32' ? isAdmin() : false; // Windowsプラットフォームで管理者権限を検出
     const hasElevatedPermissions = isRoot || hasAdminRights;
 
-    // 准备命令
+    // コマンドを準備
     const command =
       os.platform() === 'win32'
         ? `if not exist "${path.dirname(manifestPath)}" mkdir "${path.dirname(manifestPath)}" && copy "${tempManifestPath}" "${manifestPath}"`
         : `mkdir -p "${path.dirname(manifestPath)}" && cp "${tempManifestPath}" "${manifestPath}" && chmod 644 "${manifestPath}"`;
 
     if (hasElevatedPermissions) {
-      // 已经有管理员权限，直接执行命令
+      // 既に管理者権限を持っているため、コマンドを直接実行
       try {
-        // 创建目录
+        // ディレクトリを作成
         if (!fs.existsSync(path.dirname(manifestPath))) {
           fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
         }
 
-        // 复制文件
+        // ファイルをコピー
         fs.copyFileSync(tempManifestPath, manifestPath);
 
-        // 设置权限（非Windows平台）
+        // 権限を設定（非Windowsプラットフォーム）
         if (os.platform() !== 'win32') {
           fs.chmodSync(manifestPath, '644');
         }
 
-        console.log(colorText('System-level manifest registration successful!', 'green'));
+        console.log(colorText('システムレベルマニフェストの登録が成功しました！', 'green'));
       } catch (error: any) {
         console.error(
-          colorText(`System-level manifest installation failed: ${error.message}`, 'red'),
+          colorText(
+            `システムレベルマニフェストのインストールに失敗しました: ${error.message}`,
+            'red',
+          ),
         );
         throw error;
       }
     } else {
-      // 没有管理员权限，打印手动操作提示
-      console.log(
-        colorText('⚠️ Administrator privileges required for system-level installation', 'yellow'),
-      );
-      console.log(
-        colorText(
-          'Please run one of the following commands with administrator privileges:',
-          'blue',
-        ),
-      );
+      // 管理者権限がないため、手動操作の手順を出力
+      console.log(colorText('⚠️ システムレベルインストールには管理者権限が必要です', 'yellow'));
+      console.log(colorText('管理者権限で以下のいずれかのコマンドを実行してください:', 'blue'));
 
       if (os.platform() === 'win32') {
-        console.log(colorText('  1. Open Command Prompt as Administrator and run:', 'blue'));
+        console.log(colorText('  1. 管理者としてコマンドプロンプトを開いて実行:', 'blue'));
         console.log(colorText(`     ${command}`, 'cyan'));
       } else {
-        console.log(colorText('  1. Run with sudo:', 'blue'));
+        console.log(colorText('  1. sudoで実行:', 'blue'));
         console.log(colorText(`     sudo ${command}`, 'cyan'));
       }
 
-      console.log(
-        colorText('  2. Or run the registration command with elevated privileges:', 'blue'),
-      );
+      console.log(colorText('  2. または昇格権限で登録コマンドを実行:', 'blue'));
       console.log(colorText(`     sudo ${COMMAND_NAME} register --system`, 'cyan'));
 
-      throw new Error('Administrator privileges required for system-level installation');
+      throw new Error('システムレベルインストールには管理者権限が必要です');
     }
 
-    // 6. Windows特殊处理 - 设置系统级注册表
+    // 6. Windows特別処理 - システムレベルレジストリを設定
     if (os.platform() === 'win32') {
       const registryKey = `HKLM\\Software\\Google\\Chrome\\NativeMessagingHosts\\${HOST_NAME}`;
-      // 确保路径使用正确的转义格式
+      // パスが正しいエスケープ形式を使用することを確保
       const escapedPath = manifestPath.replace(/\\/g, '\\\\');
       const regCommand = `reg add "${registryKey}" /ve /t REG_SZ /d "${escapedPath}" /f`;
 
-      console.log(colorText(`Creating system registry entry: ${registryKey}`, 'blue'));
-      console.log(colorText(`Manifest path: ${manifestPath}`, 'blue'));
+      console.log(colorText(`システムレジストリエントリを作成中: ${registryKey}`, 'blue'));
+      console.log(colorText(`マニフェストパス: ${manifestPath}`, 'blue'));
 
       if (hasElevatedPermissions) {
-        // 已经有管理员权限，直接执行注册表命令
+        // 既に管理者権限を持っているため、レジストリコマンドを直接実行
         try {
           execSync(regCommand, { stdio: 'pipe' });
 
-          // 验证注册表项是否创建成功
+          // レジストリエントリが正常に作成されたかを検証
           if (verifyWindowsRegistryEntry(registryKey, manifestPath)) {
-            console.log(colorText('Windows registry entry created successfully!', 'green'));
+            console.log(colorText('Windowsレジストリエントリが正常に作成されました！', 'green'));
           } else {
-            console.log(colorText('⚠️ Registry entry created but verification failed', 'yellow'));
+            console.log(
+              colorText('⚠️ レジストリエントリは作成されましたが、検証に失敗しました', 'yellow'),
+            );
           }
         } catch (error: any) {
           console.error(
-            colorText(`Windows registry entry creation failed: ${error.message}`, 'red'),
+            colorText(`Windowsレジストリエントリの作成に失敗しました: ${error.message}`, 'red'),
           );
-          console.error(colorText(`Command: ${regCommand}`, 'red'));
+          console.error(colorText(`コマンド: ${regCommand}`, 'red'));
           throw error;
         }
       } else {
-        // 没有管理员权限，打印手动操作提示
-        console.log(
-          colorText(
-            '⚠️ Administrator privileges required for Windows registry modification',
-            'yellow',
-          ),
-        );
-        console.log(colorText('Please run the following command as Administrator:', 'blue'));
+        // 管理者権限がないため、手動操作の手順を出力
+        console.log(colorText('⚠️ Windowsレジストリの変更には管理者権限が必要です', 'yellow'));
+        console.log(colorText('管理者として以下のコマンドを実行してください:', 'blue'));
         console.log(colorText(`  ${regCommand}`, 'cyan'));
-        console.log(colorText('Or run the registration command with elevated privileges:', 'blue'));
+        console.log(colorText('または昇格権限で登録コマンドを実行:', 'blue'));
         console.log(
           colorText(
-            `  Run Command Prompt as Administrator and execute: ${COMMAND_NAME} register --system`,
+            `  管理者としてコマンドプロンプトを開いて実行: ${COMMAND_NAME} register --system`,
             'cyan',
           ),
         );
 
-        throw new Error('Administrator privileges required for Windows registry modification');
+        throw new Error('Windowsレジストリの変更には管理者権限が必要です');
       }
     }
   } catch (error: any) {
