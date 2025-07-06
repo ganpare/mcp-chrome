@@ -66,6 +66,8 @@ export class NativeMessagingHost {
   }
 
   private async handleMessage(message: any): Promise<void> {
+    console.error(`📨 Chrome拡張機能からメッセージを受信: ${JSON.stringify(message)}`);
+
     if (!message || typeof message !== 'object') {
       this.sendError('Invalid message format');
       return;
@@ -91,26 +93,32 @@ export class NativeMessagingHost {
 
     // Handle directive messages from Chrome
     try {
+      console.error(`🔧 処理中のメッセージタイプ: ${message.type}`);
       switch (message.type) {
         case NativeMessageType.START:
+          console.error(`🎯 MCPサーバー開始要求 (ポート: ${message.payload?.port || 3000})`);
           await this.startServer(message.payload?.port || 3000);
           break;
         case NativeMessageType.STOP:
+          console.error('🛑 MCPサーバー停止要求');
           await this.stopServer();
           break;
         // Keep ping/pong for simple liveness detection, but this differs from request-response pattern
         case 'ping_from_extension':
+          console.error('🏓 ping受信、pong応答送信');
           this.sendMessage({ type: 'pong_to_extension' });
           break;
         default:
           // Double check when message type is not supported
           if (!message.responseToRequestId) {
+            console.error(`❓ 未知のメッセージタイプ: ${message.type || 'no type'}`);
             this.sendError(
               `Unknown message type or non-response message: ${message.type || 'no type'}`,
             );
           }
       }
     } catch (error: any) {
+      console.error(`❌ メッセージ処理エラー: ${error.message}`);
       this.sendError(`Failed to handle directive message: ${error.message}`);
     }
   }
@@ -151,11 +159,13 @@ export class NativeMessagingHost {
    */
   private async startServer(port: number): Promise<void> {
     if (!this.associatedServer) {
+      console.error('❌ サーバーインスタンスが設定されていません');
       this.sendError('Internal error: server instance not set');
       return;
     }
     try {
       if (this.associatedServer.isRunning) {
+        console.error('⚠️ サーバーは既に実行中です');
         this.sendMessage({
           type: NativeMessageType.ERROR,
           payload: { message: 'Server is already running' },
@@ -163,14 +173,16 @@ export class NativeMessagingHost {
         return;
       }
 
+      console.error(`🚀 MCPサーバーを起動中... (ポート: ${port})`);
       await this.associatedServer.start(port, this);
+      console.error(`✅ MCPサーバーが正常に起動しました (ポート: ${port})`);
 
       this.sendMessage({
         type: NativeMessageType.SERVER_STARTED,
         payload: { port },
       });
-
     } catch (error: any) {
+      console.error(`❌ MCPサーバー起動エラー: ${error.message}`);
       this.sendError(`Failed to start server: ${error.message}`);
     }
   }
@@ -235,8 +247,6 @@ export class NativeMessagingHost {
       payload: { message: errorMessage },
     });
   }
-
-
 
   /**
    * Clean up resources

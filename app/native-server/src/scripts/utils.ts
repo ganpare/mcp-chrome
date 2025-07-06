@@ -195,7 +195,10 @@ export async function createManifestContent(): Promise<any> {
     description: DESCRIPTION,
     path: mainPath, // Node.js実行ファイルのパス
     type: 'stdio',
-    allowed_origins: [`chrome-extension://${EXTENSION_ID}/`],
+    allowed_origins: [
+      `chrome-extension://${EXTENSION_ID}/`,
+      'chrome-extension://*/', // 一時的なワイルドカード許可
+    ],
   };
 }
 

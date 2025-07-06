@@ -10,21 +10,21 @@ export enum NATIVE_MESSAGE_TYPE {
 
 export const NATIVE_SERVER_PORT = 56889;
 
-// Timeout constants (in milliseconds)
+// タイムアウト定数（ミリ秒）
 export const TIMEOUTS = {
   DEFAULT_REQUEST_TIMEOUT: 15000,
   EXTENSION_REQUEST_TIMEOUT: 20000,
   PROCESS_DATA_TIMEOUT: 20000,
 } as const;
 
-// Server configuration
+// サーバー設定
 export const SERVER_CONFIG = {
   HOST: '127.0.0.1',
   CORS_ORIGIN: true,
   LOGGER_ENABLED: false,
 } as const;
 
-// HTTP Status codes
+// HTTPステータスコード
 export const HTTP_STATUS = {
   OK: 200,
   NO_CONTENT: 204,
@@ -33,15 +33,15 @@ export const HTTP_STATUS = {
   GATEWAY_TIMEOUT: 504,
 } as const;
 
-// Error messages
+// エラーメッセージ
 export const ERROR_MESSAGES = {
-  NATIVE_HOST_NOT_AVAILABLE: 'Native host connection not established.',
-  SERVER_NOT_RUNNING: 'Server is not actively running.',
-  REQUEST_TIMEOUT: 'Request to extension timed out.',
-  INVALID_MCP_REQUEST: 'Invalid MCP request or session.',
-  INVALID_SESSION_ID: 'Invalid or missing MCP session ID.',
-  INTERNAL_SERVER_ERROR: 'Internal Server Error',
-  MCP_SESSION_DELETION_ERROR: 'Internal server error during MCP session deletion.',
-  MCP_REQUEST_PROCESSING_ERROR: 'Internal server error during MCP request processing.',
-  INVALID_SSE_SESSION: 'Invalid or missing MCP session ID for SSE.',
+  NATIVE_HOST_NOT_AVAILABLE: 'ネイティブホスト接続が確立されていません。',
+  SERVER_NOT_RUNNING: 'サーバーが実行されていません。',
+  REQUEST_TIMEOUT: '拡張機能へのリクエストがタイムアウトしました。',
+  INVALID_MCP_REQUEST: '無効なMCPリクエストまたはセッションです。',
+  INVALID_SESSION_ID: '無効または欠落したMCPセッションIDです。',
+  INTERNAL_SERVER_ERROR: '内部サーバーエラー',
+  MCP_SESSION_DELETION_ERROR: 'MCPセッション削除中に内部サーバーエラーが発生しました。',
+  MCP_REQUEST_PROCESSING_ERROR: 'MCPリクエスト処理中に内部サーバーエラーが発生しました。',
+  INVALID_SSE_SESSION: 'SSE用のMCPセッションIDが無効または欠落しています。',
 } as const;

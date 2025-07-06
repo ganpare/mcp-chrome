@@ -33,6 +33,43 @@ Chrome MCP Serverは、Chrome拡張機能ベースの**Model Context Protocol（
 
 **両方のコンポーネントが必要です**：Chrome拡張機能とMCPサーバーの両方をインストール・起動する必要があります。
 
+## 🏗️ システムアーキテクチャ
+
+このプロジェクトは2つの連携するコンポーネントで構成されています：
+
+### 1. Chrome拡張機能
+
+- **役割**: ブラウザ内でのWebページ操作、DOM解析、ユーザーインタフェース
+- **通信**: ChromeのNative Messaging APIを使用してNative Messaging Hostと通信（標準入出力）
+- **ポート設定**: 拡張機能UIで設定するポートは「MCPサーバー用ポート」（デフォルト: 3000）
+
+### 2. Native Messaging Host + MCPサーバー
+
+- **Native Messaging Host** (`node dist/index.js`)
+  - Chrome拡張機能からの指示を受信（サーバー開始/停止等）
+  - 標準入出力（stdin/stdout）でChrome拡張機能と通信
+  - 内部でMCPサーバーの起動/停止を制御
+- **MCPサーバー**
+  - Native Messaging Hostによって動的に起動される
+  - 指定されたHTTPポートでリッスン（拡張機能から設定可能）
+  - AIクライアント（Claude Desktop等）からの接続を受け入れ
+
+### 通信フロー
+
+```text
+Chrome拡張機能 ←→ Native Messaging Host ←→ MCPサーバー ←→ AIクライアント
+   (Native Messaging API)    (内部制御)      (HTTP)
+```
+
+### 起動順序
+
+1. Native Messaging Hostを起動 (`node dist/index.js`)
+2. Chrome拡張機能で「サーバー開始」をクリック
+3. MCPサーバーが指定ポートで自動起動
+4. AIクライアントからMCPサーバーに接続
+
+**重要**: Native Messaging Hostは常に起動しておく必要があります。MCPサーバーは拡張機能から動的に制御されます。
+
 ## ✨ 主要機能
 
 - 😁 **チャットボット/モデル非依存**: お好みのLLMやチャットボットクライアント、エージェントでブラウザを自動化
@@ -67,7 +104,25 @@ Chrome MCP Serverは、Chrome拡張機能ベースの**Model Context Protocol（
 
 Chrome MCP Serverを使用するには、**以下の2つのコンポーネントを両方インストールする必要があります**：
 
-#### ステップ1: Chrome拡張機能のインストール
+#### 🚀 簡単インストール（推奨）
+
+1. **GitHubから最新のChrome拡張機能をダウンロード**
+
+   - [リリースページ](https://github.com/hangwin/mcp-chrome/releases)から最新版をダウンロード
+   - Chrome拡張機能をインストール
+
+2. **Native MCPサーバーをインストール**
+   ```bash
+   npm install -g mcp-chrome-bridge
+   # または
+   pnpm install -g mcp-chrome-bridge
+   ```
+
+#### 🛠️ 開発者向けセットアップ（カスタマイズ用）
+
+開発・カスタマイズが必要な場合のみ：
+
+**ステップ1: Chrome拡張機能のビルド**
 
 1. **GitHubから最新のChrome拡張機能をダウンロード**
 
@@ -108,7 +163,15 @@ mcp-chrome-bridge register
    - 「デベロッパーモード」を有効にする
    - 「パッケージ化されていない拡張機能を読み込む」をクリックし、`ダウンロードした拡張機能フォルダ`を選択
    - 拡張機能アイコンをクリックしてプラグインを開き、「接続」をクリックしてMCP設定を確認
-     <img width="475" alt="Screenshot 2025-06-09 15 52 06" src="https://github.com/user-attachments/assets/241e57b8-c55f-41a4-9188-0367293dc5bc" />
+
+> **重要**: Chrome拡張機能が正常に動作するには、以下の2つのプロセスが両方とも起動している必要があります：
+>
+> 1. **Native Messaging Host** - Chrome拡張機能とサーバー間の通信を担当
+> 2. **MCP HTTPサーバー** - MCPクライアント（Claude等）からの接続を受け付け
+>
+> 拡張機能のポップアップで「サーバー未起動」と表示される場合は、両方のプロセスが起動していることを確認してください。
+
+![Screenshot](https://github.com/user-attachments/assets/241e57b8-c55f-41a4-9188-0367293dc5bc)
 
 ### MCPプロトコルクライアントでの使用
 
@@ -165,142 +228,291 @@ pnpm list -g mcp-chrome-bridge
 
 <img width="494" alt="截屏2025-06-22 22 11 25" src="https://github.com/user-attachments/assets/48eefc0c-a257-4d3b-8bbe-d7ff716de2bf" />
 
-## 🛠️ 利用可能なツール
+## 🛠️ 便利コマンド集
 
-完全なツールリスト: [完全なツールリスト](docs/TOOLS.md)
+### 🚀 本番用（リリース版）コマンド
 
-<details>
-<summary><strong>📊 ブラウザ管理（6ツール）</strong></summary>
+本番環境で使用する際の便利コマンドです。
 
-- `get_windows_and_tabs` - すべてのブラウザウィンドウとタブをリスト
-- `chrome_navigate` - URLナビゲーションとビューポート制御
-- `chrome_close_tabs` - 特定のタブまたはウィンドウを閉じる
-- `chrome_go_back_or_forward` - ブラウザナビゲーション制御
-- `chrome_inject_script` - ウェブページにコンテンツスクリプトを注入
-- `chrome_send_command_to_inject_script` - 注入されたコンテンツスクリプトにコマンドを送信
-</details>
+#### インストール・セットアップ
 
-<details>
-<summary><strong>📸 スクリーンショット＆ビジュアル（1ツール）</strong></summary>
+```bash
+# MCPサーバーをグローバルインストール
+npm install -g mcp-chrome-bridge
+# または
+pnpm install -g mcp-chrome-bridge
 
-- `chrome_screenshot` - 要素ターゲティング、フルページサポート、カスタム寸法対応の高度なスクリーンショット撮影
-</details>
+# Native Messaging Host登録確認（Windowsの場合）
+reg query "HKEY_CURRENT_USER\Software\Google\Chrome\NativeMessagingHosts\com.chromemcp.nativehost"
 
-<details>
-<summary><strong>🌐 ネットワーク監視（4ツール）</strong></summary>
+# パッケージインストール場所確認
+npm list -g mcp-chrome-bridge
+# または
+pnpm list -g mcp-chrome-bridge
+```
 
-- `chrome_network_capture_start/stop` - webRequest APIネットワークキャプチャ
-- `chrome_network_debugger_start/stop` - レスポンスボディ付きデバッガAPI
-- `chrome_network_request` - カスタムHTTPリクエストの送信
-</details>
+#### 起動・停止
 
-<details>
-<summary><strong>🔍 コンテンツ解析（4ツール）</strong></summary>
+```bash
+# Native Messaging Hostを起動（バックグラウンドで実行）
+mcp-chrome-bridge start
 
-- `search_tabs_content` - ブラウザタブ間でのAI駆動セマンティック検索
-- `chrome_get_web_content` - ページからHTML/テキストコンテンツを抽出
-- `chrome_get_interactive_elements` - クリック可能な要素を検索
-- `chrome_console` - ブラウザタブからコンソール出力をキャプチャ・取得
-</details>
+# MCPサーバーの状態確認
+mcp-chrome-bridge status
 
-<details>
-<summary><strong>🎯 インタラクション（3ツール）</strong></summary>
+# プロセス確認
+tasklist | findstr node
+netstat -ano | findstr :3000    # デフォルトポート3000の確認
 
-- `chrome_click_element` - CSSセレクターを使用して要素をクリック
-- `chrome_fill_or_select` - フォームを入力し、オプションを選択
-- `chrome_keyboard` - キーボード入力とショートカットをシミュレート
-</details>
+# Native Messaging Hostを停止
+mcp-chrome-bridge stop
+```
 
-<details>
-<summary><strong>📚 データ管理（5ツール）</strong></summary>
+#### メンテナンス
 
-- `chrome_history` - 時間フィルター付きブラウザ履歴検索
-- `chrome_bookmark_search` - キーワードでブックマークを検索
-- `chrome_bookmark_add` - フォルダサポート付きで新しいブックマークを追加
-- `chrome_bookmark_delete` - ブックマークを削除
-</details>
+```bash
+# パッケージ更新
+npm update -g mcp-chrome-bridge
+# または
+pnpm update -g mcp-chrome-bridge
 
-## 🧪 使用例
+# アンインストール
+npm uninstall -g mcp-chrome-bridge
+# または
+pnpm uninstall -g mcp-chrome-bridge
 
-### AIがウェブページコンテンツを要約し、Excalidrawを自動制御して図を描画
+# ログ確認
+mcp-chrome-bridge logs
+```
 
-プロンプト: [excalidraw-prompt](prompt/excalidraw-prompt.md)
-指示: 現在のページコンテンツを要約し、理解を助けるための図を描いてください。
+### 🔧 開発用（ソースビルド）コマンド
 
-https://github.com/user-attachments/assets/fd17209b-303d-48db-9e5e-3717141df183
+開発・カスタマイズ時に使用する便利コマンドです。
 
-### 画像の内容を解析した後、LLMがExcalidrawを自動制御して画像を再現
+#### 初期セットアップ
 
-プロンプト: [excalidraw-prompt](prompt/excalidraw-prompt.md)|[content-analize](prompt/content-analize.md)
-指示: まず画像の内容を解析し、その解析と画像の内容を組み合わせて画像を再現してください。
+```bash
+# リポジトリクローン
+git clone https://github.com/hangwin/mcp-chrome.git
+cd chrome-mcp
 
-https://github.com/user-attachments/assets/60d12b1a-9b74-40f4-994c-95e8fa1fc8d3
+# 依存関係インストール
+pnpm install
 
-### AIが自動でスクリプトを注入し、ウェブページスタイルを修正
+# 全体ビルド
+pnpm build
 
-プロンプト: [modify-web-prompt](prompt/modify-web.md)
-指示: 現在のページのスタイルを修正し、広告を削除してください。
+# 開発環境用Native Messaging Host登録
+cd app/native-server
+pnpm run register:dev
+```
 
-https://github.com/user-attachments/assets/69cb561c-2e1e-4665-9411-4a3185f9643e
+#### 開発サーバー起動
 
-### AIが自動でネットワークリクエストをキャプチャ
+```bash
+# Chrome拡張機能開発サーバー（ホットリロード）
+pnpm dev:extension
 
-クエリ: 小红书の検索APIは何で、レスポンス構造はどのようになっているか知りたい
+# Native MCPサーバー開発サーバー
+pnpm dev:native
 
-https://github.com/user-attachments/assets/063f44ae-1754-46b6-b141-5988c86e4d96
+# または、ルートディレクトリから
+pnpm dev:extension
+pnpm dev:native
+```
 
-### AIがブラウジング履歴を解析
+#### 開発用Native Messaging Host起動
 
-クエリ: 過去1ヶ月のブラウジング履歴を解析してください
+```bash
+# 開発版Native Messaging Host起動
+cd app/native-server
+node dist/index.js
 
-https://github.com/user-attachments/assets/e7a35118-e50e-4b1c-a790-0878aa2505ab
+# または、登録後は
+mcp-chrome-bridge start
+```
 
-### ウェブページ会話
+#### 開発用デバッグ・確認
 
-クエリ: 現在のウェブページを翻訳し、要約してください
+```bash
+# ポート使用状況確認
+netstat -an | findstr :56889
+netstat -an | findstr :3000
 
-https://github.com/user-attachments/assets/08aa86aa-7706-4df2-b400-576e2c7fcc7f
+# プロセス確認
+tasklist | findstr node.exe
 
-### AIが自動でスクリーンショットを撮影（ウェブページスクリーンショット）
+# Native Messaging Host登録確認
+reg query "HKEY_CURRENT_USER\Software\Google\Chrome\NativeMessagingHosts\com.chromemcp.nativehost"
 
-クエリ: Hugging Faceのホームページのスクリーンショットを撮ってください
+# 設定ファイル確認
+cat "%APPDATA%\Google\Chrome\NativeMessagingHosts\com.chromemcp.nativehost.json"
 
-https://github.com/user-attachments/assets/b081e41b-6309-40d6-885b-0da01691b12e
+# ログ確認（開発時）
+cd app/native-server
+node dist/index.js | findstr "INFO\|ERROR\|WARN"
+```
 
-### AIが自動でスクリーンショットを撮影（要素スクリーンショット）
+#### 開発用Chrome拡張機能
 
-クエリ: Hugging Faceのホームページからアイコンをキャプチャしてください
+```bash
+# 拡張機能ID確認（.env.local設定後）
+cd app/chrome-extension
+cat .env.local
 
-https://github.com/user-attachments/assets/25657076-b84b-4459-a72f-90f896f06364
+# 開発用ビルド
+pnpm build
 
-### AIがブックマーク管理を支援
+# 開発用ビルド（監視モード）
+pnpm dev
+```
 
-クエリ: 現在のページをブックマークに追加し、適切なフォルダに入れてください
+### 🚀 本番用コマンド
 
-https://github.com/user-attachments/assets/73c1ea26-65fb-4b5e-b537-e32fa9bcfa52
+#### 本番環境セットアップ
 
-### 自動的にウェブページを閉じる
+```bash
+# グローバルインストール（npm）
+npm install -g mcp-chrome-bridge
 
-クエリ: shadcn関連のウェブページをすべて閉じてください
+# グローバルインストール（pnpm）
+pnpm config set enable-pre-post-scripts true
+pnpm install -g mcp-chrome-bridge
 
-https://github.com/user-attachments/assets/ff160f48-58e0-4c76-a6b0-c4e1f91370c8
+# 手動登録（自動登録が失敗した場合）
+mcp-chrome-bridge register
+```
 
-## 🤝 コントリビューション
+#### 本番用サーバー起動・停止
 
-コントリビューションを歓迎します！詳細なガイドラインについては、[CONTRIBUTING.md](docs/CONTRIBUTING.md)をご覧ください。
+```bash
+# サーバー起動
+mcp-chrome-bridge start
 
-## 🚧 将来のロードマップ
+# サーバー停止
+mcp-chrome-bridge stop
 
-Chrome MCP Serverの将来の開発について、エキサイティングな計画があります：
+# サーバー再起動
+mcp-chrome-bridge restart
 
-- [ ] 認証
-- [ ] 記録と再生
-- [ ] ワークフロー自動化
-- [ ] 拡張ブラウザサポート（Firefox拡張機能）
+# サーバー状態確認
+mcp-chrome-bridge status
+```
+
+#### 本番用デバッグ・確認
+
+```bash
+# インストール確認
+npm list -g mcp-chrome-bridge
+# または
+pnpm list -g mcp-chrome-bridge
+
+# 設定ファイル確認
+mcp-chrome-bridge config
+
+# ログ確認
+mcp-chrome-bridge logs
+
+# Native Messaging Host登録確認
+mcp-chrome-bridge check
+
+# ポート使用状況確認
+netstat -an | findstr :56889
+netstat -an | findstr :3000
+
+# プロセス確認
+tasklist | findstr "mcp-chrome-bridge\|node.exe"
+```
+
+#### 本番用Chrome拡張機能
+
+```bash
+# 最新リリース版ダウンロード
+# https://github.com/hangwin/mcp-chrome/releases
+
+# Chrome拡張機能手動インストール
+# 1. chrome://extensions/ を開く
+# 2. デベロッパーモードを有効
+# 3. 「パッケージ化されていない拡張機能を読み込む」
+# 4. ダウンロードした拡張機能フォルダを選択
+```
+
+### 🔧 トラブルシューティング用コマンド
+
+#### 接続問題の診断
+
+```bash
+# 全サービス状態確認
+mcp-chrome-bridge status
+netstat -an | findstr :56889
+tasklist | findstr node.exe
+
+# Native Messaging Host再登録
+mcp-chrome-bridge unregister
+mcp-chrome-bridge register
+
+# 設定ファイル再生成
+mcp-chrome-bridge config --reset
+
+# キャッシュクリア（開発時）
+cd app/chrome-extension
+rm -rf dist/ .output/
+pnpm build
+```
+
+#### ログ・デバッグ情報取得
+
+```bash
+# 詳細ログ出力（開発時）
+cd app/native-server
+set DEBUG=mcp-chrome:*
+node dist/index.js
+
+# 本番ログ確認
+mcp-chrome-bridge logs --tail
+
+# Chrome拡張機能ログ確認
+# Chrome DevTools > Console でエラーログを確認
+```
+
+#### ポート・プロセス管理
+
+```bash
+# ポート強制解放（必要時のみ）
+netstat -ano | findstr :56889
+taskkill /PID <プロセスID> /F
+
+# 全MCPプロセス停止
+taskkill /IM "mcp-chrome-bridge.exe" /F
+taskkill /IM "node.exe" /F /FI "WINDOWTITLE eq mcp-chrome*"
+
+# サービス完全リセット
+mcp-chrome-bridge stop
+timeout /t 3
+mcp-chrome-bridge start
+```
+
+### 💡 運用のベストプラクティス
+
+#### 開発時
+
+- Chrome拡張機能IDを固定 (`.env.local`でCHROME_EXTENSION_KEY設定)
+- Native Messaging Host設定でallowed_originsに固定IDを指定
+- 開発サーバーは`pnpm dev`で監視モード推奨
+
+#### 本番時
+
+- グローバルインストール版 (`mcp-chrome-bridge`) を使用
+- Chrome拡張機能は公式リリース版を推奨
+- 定期的な`mcp-chrome-bridge status`でヘルスチェック
+
+#### セキュリティ
+
+- 本番環境では拡張機能IDを固定推奨
+- allowed_originsにワイルドカード (`chrome-extension://*/*`) 使用時は注意
+- 必要最小限の権限での運用を心がける
 
 ---
-
-**これらの機能のいずれかにコントリビューションしたいですか？** [コントリビューションガイド](docs/CONTRIBUTING.md)をチェックして、開発コミュニティに参加してください！
 
 ## 📄 ライセンス
 

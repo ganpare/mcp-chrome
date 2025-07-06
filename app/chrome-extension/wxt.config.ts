@@ -26,7 +26,7 @@ export default defineConfig({
     // ],
   },
   manifest: {
-    // Use environment variable for the key, fallback to undefined if not set
+    // 本番では拡張機能IDを固定（開発時も推奨）
     key: CHROME_EXTENSION_KEY,
     name: 'chrome-mcp-server',
     description: 'Exposes browser capabilities with your own chrome',

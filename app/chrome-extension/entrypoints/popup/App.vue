@@ -37,7 +37,7 @@
             </div>
           </div>
           <div class="port-section">
-            <label for="port" class="port-label">接続ポート</label>
+            <label for="port" class="port-label">MCPサーバーポート</label>
             <input
               type="text"
               id="port"
